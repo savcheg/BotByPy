@@ -12,9 +12,9 @@ bot = telebot.TeleBot('TOKEN')
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(message.chat.id, 'Привет, ' + message.from_user.first_name)
-    bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEBD5ZgYEMNgIdeeJb4_7IzqITscTWNOwAC0CsAAulVBRi_MsxcZV5XCh4E')
+    bot.send_sticker(message.chat.id, 'id стикера')
     bot.send_message(message.chat.id, 'Что будем делать?', reply_markup = kb.greetkeyboard())
-    bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAEBD5lgYEMPhQrPoYSg17wmU2cPEy1yowAC-isAAulVBRgEi75kjBko2h4E')
+    bot.send_sticker(message.chat.id, 'id стикера')
 
 
 @bot.message_handler(content_types= ['text'])

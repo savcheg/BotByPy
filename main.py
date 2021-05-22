@@ -1,5 +1,3 @@
-import pyowm
-from pyowm.utils.config import get_default_config
 import keyboards as kb
 import telebot, bs4, requests
 

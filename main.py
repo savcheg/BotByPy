@@ -5,7 +5,7 @@ import telebot, bs4, requests
 
 
 # TOKEN
-bot = telebot.TeleBot('1791715945:AAHF0exJ-9gTdfhv5PXziJVugzQN3I1w0eI')
+bot = telebot.TeleBot('TOKEN')
 
 
 # Обработчик события приветствия

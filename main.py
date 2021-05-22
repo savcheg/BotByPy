@@ -20,7 +20,7 @@ def greeting(message):
     if message.text == '☀Узнать погоду':
         setlocation(message)
     elif message.text == '📱Калькулятор':
-        getMeassage(message)
+        start_calc(message)
     elif message.text == '🈹Символы':
         magictext(message)
 
@@ -106,44 +106,60 @@ def outputWord(message):
 
 # Калькулятор
 # Текущее значение калькулятора
-########################################## ЕСЛИ БУДЕТ ПРОВЕРЯТЬ КОД, ТО НЕ ЗАСЧИТАЕТ ЭТОТ ВАРИАНТ
-value = ''
-old_value = ''
+def start_calc(message):
+    primer = bot.send_message(message.chat.id, "Введите пример >>")
+    bot.register_next_step_handler(primer, calculator)
 
-# Обработчик события вызова калькулятора
-@bot.message_handler(commands=['calculator'])
-def getMeassage(message):
-    global value
-    if value == '':
-       bot.send_message(message.from_user.id, '0', reply_markup=kb.calckeyboard())
-    else:
-        bot.send_message(message.from_user.id, value, reply_markup=kb.calckeyboard())
-# Программа калькулятора
-@bot.callback_query_handler(func=lambda call: True)
-def callback_func(query):
-    global value, old_value
-    data = query.data
-    if data == 'C':
-        value = ''
-    elif data == '<=':
-        if value != '':
-            value = value[:len(value)-1]
-    elif data == '=':
-        try:
-            value = str( eval(value) )
-        except:
-            value = 'Ошибка!'
-    else:
-        value += data
-    if (value != old_value and value != '') or ('0' != old_value and value == ''):
-        if value == '':
-            bot.edit_message_text(chat_id=query.message.chat.id, message_id=query.message.message_id, text='0', reply_markup=kb.calckeyboard())
-            old_value = '0'
+
+def calculator(message):
+    s = message.text
+    s = re.sub(r"\s*", "", s)
+    s1 = ""
+    queue = []
+    stack = []
+    for i in range(0, len(s)):
+        if (s[i].isdigit()):
+            s1 = str(s1) + str(s[i])
         else:
-            bot.edit_message_text(chat_id=query.message.chat.id, message_id=query.message.message_id, text=value, reply_markup=kb.calckeyboard())
-            old_value = value
-    if value == 'Ошибка!':
-        value = ''
+            if (len(s1) > 0):
+                queue.append(s1)
+                s1 = ""
+            if (len(stack) == 0 or stack[0] == "("):
+                stack.insert(0, s[i])
+            elif (s[i] in "*/" and stack[0] in "+-"):
+                stack.insert(0, s[i])
+            elif (s[i] in "+-*/" and stack[0] in "+-*/"):
+                if (s[i] in "+-" and stack[0] in "*/+-"):
+                    while (len(stack) > 0 and not (stack[0] in "(")):
+                        queue.append(stack.pop(0))
+                    stack.insert(0, s[i])
+                elif (s[i] in "*/" and stack[0] in "*/"):
+                    while (len(stack) > 0 and not (stack[0] in "+-(")):
+                        queue.append(stack.pop(0))
+                    stack.insert(0, s[i])
+            elif (s[i] == "("):
+                stack.insert(0, "(")
+            elif (s[i] == ")"):
+                while (len(stack) > 0 and stack[0] != "("):
+                    queue.append(stack.pop(0))
+                if (len(stack) > 0): stack.pop(0)
+    if (len(s1) > 0): queue.append(s1)
+    while (len(stack) > 0): queue.append(stack.pop(0))
+    stack1 = []
+    for i in queue:
+        if (i.isdigit()):
+            stack1.insert(0, i)
+        elif (i in "+-*/"):
+            a = int(stack1.pop(0))
+            b = int(stack1.pop(0))
+            res = 0
+            if (i == "+"): res = b + a
+            if (i == "-"): res = b - a
+            if (i == "*"): res = b * a
+            if (i == "/"): res = b / a
+            stack1.insert(0, res)
+    bot.send_message(message.chat.id, 'Вот тебе ответ:')
+    bot.send_message(message.chat.id, str(res), reply_markup=kb.greetkeyboard())
 
 
 # Запуск бота

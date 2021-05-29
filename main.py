@@ -1,34 +1,31 @@
+import re
+
 import keyboards as kb
-import telebot, bs4, requests
+import telebot, requests
 
 
 # TOKEN
-bot = telebot.TeleBot('TOKEN')
+bot = telebot.TeleBot("1868448936:AAGnebbrW9BkMt-LrRY0CN038s3f7mK-HLA")
 
 
 # Обработчик события приветствия
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, 'Привет, ' + message.from_user.first_name)
-    bot.send_sticker(message.chat.id, 'id стикера')
-    bot.send_message(message.chat.id, 'Что будем делать?', reply_markup = kb.greetkeyboard())
-    bot.send_sticker(message.chat.id, 'id стикера')
-
+    bot.send_message(message.chat.id, 'Привет, ' + message.from_user.first_name, reply_markup = kb.greetkeyboard())
 
 @bot.message_handler(content_types= ['text'])
 def greeting(message):
-    if message.text == '☀Узнать погоду':
+    if message.text == 'Узнать погоду':
         setlocation(message)
-    elif message.text == '📱Калькулятор':
+    elif message.text == 'Калькулятор':
         start_calc(message)
-    elif message.text == '🈹Символы':
+    elif message.text == 'Графика':
         magictext(message)
 
 
 # Погода
 url = 'http://api.openweathermap.org/data/2.5/weather'
-api_weather = '489f45987eb92460dc4955babb3bbeec'
-api_telegram = '1791715945:AAHF0exJ-9gTdfhv5PXziJVugzQN3I1w0eI'
+api_weather = 'f3ed8e4e21b60cbface5df90ff430d57'
 @bot.message_handler(commands=['weather'])
 def setlocation(message):
     location = bot.send_message(message.chat.id, 'Выберете город:')
@@ -42,30 +39,11 @@ def outWeatherInfo(message):
         result = requests.get(url, params=params)
         weather = result.json()
 
-        if weather["main"]['temp'] < -20:
-            status = "🥶На улице дубэо! Холодэо!"
-        elif weather["main"]['temp'] < -10:
-            status = "🥶Думаю, лучше остаться дома!"
-        elif weather["main"]['temp'] < 0:
-            status = "😨Пора менять резину!"
-        elif weather["main"]['temp'] < 10:
-            status = "😏Сейчас холодновато!"
-        elif weather["main"]['temp'] < 20:
-            status = "🔥Сейчас тепло!"
-        elif weather["main"]['temp'] > 25:
-            status = "🔥Сейчас жарко!"
-        else:
-            status = "🔥Сейчас отличная температура!"
 
         bot.send_message(message.chat.id, "🌡В городе " + str(weather["name"]) + " температура " + str(
             float(weather["main"]['temp'])) + " °C\n" +
-                         "📈Максимальная температура " + str(float(weather['main']['temp_max'])) + " °C\n" +
-                         "📉Минимальная температура " + str(float(weather['main']['temp_min'])) + " °C\n" +
                          "💨Скорость ветра " + str(float(weather['wind']['speed'])) + " м/с\n" +
-                         "🅿️Давление " + str(float(weather['main']['pressure'])) + " мбар\n" +
-                         "💦Влажность " + str(int(weather['main']['humidity'])) + " %\n" +
-                         "👀Видимость " + str(weather['visibility']) + "\n" +
-                         "📜Описание: " + str(weather['weather'][0]["description"]) + "\n\n" + status, kb.greetkeyboard())
+                         "💦Влажность " + str(int(weather['main']['humidity'])) + " %\n", kb.greetkeyboard())
 
     except:
         bot.send_message(message.chat.id, "Город " + city_name + " не найден", kb.greetkeyboard())
@@ -77,7 +55,7 @@ alphabet =      {'А' : 0, 'Б' : 1, 'В' : 2, 'Г' : 3, 'Д' : 4, 'Е' : 5, 'Ж
                  'Я' : 30}
 
 # Вводим слово
-@bot.message_handler(commands=['magictext'])
+@bot.message_handler(commands=['graphics'])
 def magictext(message):
     getWord = bot.send_message(message.chat.id, "Введите слово: ")
     bot.register_next_step_handler(getWord, outputWord)
@@ -106,6 +84,7 @@ def outputWord(message):
 
 # Калькулятор
 # Текущее значение калькулятора
+@bot.message_handler(commands=['calculator'])
 def start_calc(message):
     primer = bot.send_message(message.chat.id, "Введите пример >>")
     bot.register_next_step_handler(primer, calculator)
@@ -126,14 +105,14 @@ def calculator(message):
                 s1 = ""
             if (len(stack) == 0 or stack[0] == "("):
                 stack.insert(0, s[i])
-            elif (s[i] in "*/" and stack[0] in "+-"):
+            elif (s[i] in "*/^" and stack[0] in "+-"):
                 stack.insert(0, s[i])
-            elif (s[i] in "+-*/" and stack[0] in "+-*/"):
-                if (s[i] in "+-" and stack[0] in "*/+-"):
+            elif (s[i] in "+-*/^" and stack[0] in "+-*/^"):
+                if (s[i] in "+-" and stack[0] in "^*/+-"):
                     while (len(stack) > 0 and not (stack[0] in "(")):
                         queue.append(stack.pop(0))
                     stack.insert(0, s[i])
-                elif (s[i] in "*/" and stack[0] in "*/"):
+                elif (s[i] in "*/^" and stack[0] in "*/^"):
                     while (len(stack) > 0 and not (stack[0] in "+-(")):
                         queue.append(stack.pop(0))
                     stack.insert(0, s[i])
@@ -149,7 +128,7 @@ def calculator(message):
     for i in queue:
         if (i.isdigit()):
             stack1.insert(0, i)
-        elif (i in "+-*/"):
+        elif (i in "+-*/^"):
             a = int(stack1.pop(0))
             b = int(stack1.pop(0))
             res = 0
@@ -157,6 +136,7 @@ def calculator(message):
             if (i == "-"): res = b - a
             if (i == "*"): res = b * a
             if (i == "/"): res = b / a
+            if (i == "^"): res = pow(b, a)
             stack1.insert(0, res)
     bot.send_message(message.chat.id, 'Вот тебе ответ:')
     bot.send_message(message.chat.id, str(res), reply_markup=kb.greetkeyboard())
